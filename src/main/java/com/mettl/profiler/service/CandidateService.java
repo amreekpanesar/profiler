@@ -2,23 +2,22 @@ package com.mettl.profiler.service;
 
 
 import com.mettl.profiler.dao.CandidateData;
-import com.mettl.profiler.dao.CandidateRepository;
+import com.mettl.profiler.dao.repository.CandidateDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CandidateService {
 
-
     @Autowired
-    private CandidateRepository candidateRepository;
+    private CandidateDataRepository candidateDataRepository;
 
     public CandidateData getCandidate(Integer id){
-        return new CandidateData();
+        return candidateDataRepository.findById(id).get();
     }
 
     public void createCandidate(CandidateData candidate){
-        candidateRepository.save(candidate);
+        candidateDataRepository.save(candidate);
     }
 
     public CandidateData getCandidate(String email){

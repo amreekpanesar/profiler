@@ -1,14 +1,14 @@
 package com.mettl.profiler.dao;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 public class CandidateData {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    
     private String email;
     private String firstName;
     private String crfJson;

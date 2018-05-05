@@ -9,9 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ProfilerApplication {
     public static void main(String[] args) {
         Logger log = LogManager.getRootLogger();
-
-        log.debug("Starting Application");
-
+        log.info("Starting Application");
         SpringApplication.run(ProfilerApplication.class, args);
 	}
 }

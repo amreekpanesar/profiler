@@ -1,12 +1,12 @@
 package com.mettl.profiler.dao;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class CandidateProfile {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private Integer candidate_id;
     private String linkedIn_json;
