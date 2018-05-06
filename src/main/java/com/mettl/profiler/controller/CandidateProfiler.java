@@ -1,5 +1,6 @@
 package com.mettl.profiler.controller;
 
+import com.mettl.profiler.crawler.Crawler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import com.mettl.profiler.service.CandidateService;
 public class CandidateProfiler {
 
     Logger log = LogManager.getRootLogger();
+
+    Crawler crawler = new Crawler();
 
     @Autowired
     public CandidateService candidateService;
@@ -47,23 +50,24 @@ public class CandidateProfiler {
 
         CandidateData candidateData = new CandidateData();
 
-        candidateData.setfirstName(JsonPath.read(crfJson, "$.name"));
-        candidateData.setEmail(JsonPath.read(crfJson, "$.email"));
-        candidateData.setCrfJson("{\"location\":\"" + JsonPath.read(crfJson, "$.name")
-                + "\",\"lastName\":\"" + JsonPath.read(crfJson, "$.name") + "\"}");
+        String firstName = JsonPath.read(crfJson, "$.name");
+        String email = JsonPath.read(crfJson, "$.email");
+        String lastName = JsonPath.read(crfJson, "$.lastName");
+        String location = JsonPath.read(crfJson, "$.location");
+
+        candidateData.setfirstName(firstName);
+        candidateData.setEmail(email);
+        candidateData.setCrfJson("{\"location\":\"" + location +"\",\"lastName\":\"" +  lastName  + "\"}");
         candidateService.createCandidate(candidateData);
 
         CandidateProfile candidateProfile = new CandidateProfile();
-        candidateProfile.setGithub_json(
-                "{\"EVENT_TYPE\":\"startAssessment\",\"invitation_key\":\"6a283287\"}");
+        candidateProfile.setGithub_json(crawler.getGitHubData(firstName, lastName, location , email));
 
-        candidateProfile.setLinkedIn_json(
-                "{\"EVENT_TYPE\":\"startAssessment\",\"invitation_key\":\"6a283287\"}");
-        candidateProfile
-                .setSo_json("{\"EVENT_TYPE\":\"startAssessment\",\"invitation_key\":\"6a283287\"}");
+        candidateProfile.setLinkedIn_json("");
+        candidateProfile.setSo_json(crawler.getStackOverflowProfile(firstName, lastName, location, email));
         candidateProfileService.createCandidateProfile(candidateProfile);
 
-        return "asdasdgf";
+        return "{\"success\":true}";
 
     }
 

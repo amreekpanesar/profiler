@@ -17,6 +17,8 @@ public class Crawler {
     public String getLinks(String firstName, String lastName, String location, String email,
             String source) {
 
+        RestAssured.useRelaxedHTTPSValidation();
+
         if (source.contains("stack")) {
             String url =
                     "https://stackoverflow.com/users/filter?search=" + firstName + "+" + lastName
@@ -108,6 +110,7 @@ public class Crawler {
     public String getStackOverflowProfile(String firstName, String lastName, String location,
             String email) {
 
+        RestAssured.useRelaxedHTTPSValidation();
         String url = getLinks(firstName, lastName, location, email, "stack");
         String outputJson = RestAssured.given().header("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:55.0) Gecko/20100101 Firefox/55.0")
@@ -189,8 +192,13 @@ public class Crawler {
 
     public String getGitHubData(String firstName, String lastName, String location, String email) {
 
+        RestAssured.useRelaxedHTTPSValidation();
+
         String url = getLinks(firstName, lastName, location, email, "git");
-        ResponseBody response = RestAssured.given().get(url).getBody();
+        ResponseBody response = RestAssured
+                .given().log().all()
+                .get(url)
+                .getBody();
 
         Map<String, String> data = new LinkedHashMap<String, String>();
 

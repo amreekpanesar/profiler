@@ -19,6 +19,10 @@ public class CandidateProfileService {
         return new CandidateProfile();
     }
 
+    public CandidateProfile getCandidateProfile(Integer id) {
+        return candidateProfileRepository.findById(id).get();
+    }
+
     public List<CandidateProfile> getAllCandidateProfiles() {
         List<CandidateProfile> candidateProfileList = new ArrayList<>();
         // candidateProfileTable.findAll()
@@ -29,7 +33,4 @@ public class CandidateProfileService {
     public void createCandidateProfile(CandidateProfile candidateProfile) {
         candidateProfileRepository.save(candidateProfile);
     }
-
-
-
 }
