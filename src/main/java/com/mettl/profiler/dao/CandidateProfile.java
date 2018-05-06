@@ -1,23 +1,15 @@
 package com.mettl.profiler.dao;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "candidate_profile")
 public class CandidateProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @OneToOne
-    @JoinColumn(name = "candidatedata_id")
     private Integer candidate_id;
-
     private String linkedin_json;
     private String github_json;
     private String so_json;
