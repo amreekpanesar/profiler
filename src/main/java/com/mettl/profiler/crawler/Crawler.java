@@ -18,15 +18,17 @@ public class Crawler {
 
         if (fetcher.contains("stack")) {
             String url =
-                    "https://stackoverflow.com/users/filter?search=" + firstName + "+" + lastName;
+                    "https://stackoverflow.com/users/filter?search="+ firstName + "+" + lastName+"&filter=All&tab=Reputation&_="+System.currentTimeMillis();
             //String url = "https://stackoverflow.com/users";
-            String users = RestAssured.given().get(url).getBody().asString();
-            Elements userNames = Jsoup.parse(users).select(".user-details>a[href]");
+
+            RestAssured.urlEncodingEnabled=false;
+            String users = RestAssured.given().header("X-Requested-With","XMLHttpRequest").header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36").get(url).getBody().asString();
+            Elements userNames = Jsoup.parse(users).select("div[class=user-details]>a");
             Elements userLocation = Jsoup.parse(users).select(".user-location");
             String userURL = null;
 
             for (int i = 0; i < userNames.size(); i++) {
-                if (userNames.get(i).text().contains(firstName))
+                if (userNames.get(i).text().toLowerCase().contains(firstName))
                     //if(userLocation.get(i).text().contains(location)) {}
                     userURL = "https://stackoverflow.com/" + userNames.get(i).attr("href");
                 break;
@@ -74,7 +76,7 @@ public class Crawler {
 
     public Map<String, Object> getStackOverflowProfile() {
 
-        String url = getLinks("Tarun", "Lalwani", "", "stack");
+        String url = getLinks("karan", "malhotra", "", "stack");
         String outputJson = RestAssured.given().header("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:55.0) Gecko/20100101 Firefox/55.0")
                 .header("Accept",
@@ -86,14 +88,30 @@ public class Crawler {
         Map<String, Object> skillInfo = new TreeMap<String, Object>();
         List<Map<String, Object>> skillMap = new ArrayList<Map<String, Object>>();
 
-        badgeDetails.put("goldBadgeCount",
-                Jsoup.parse(outputJson).select(".-total").get(0).text().replace(",", ""));
-        badgeDetails.put("silverBadgeCount",
-                Jsoup.parse(outputJson).select(".-total").get(1).text().replace(",", ""));
-        badgeDetails.put("bronzeBadgeCount",
-                Jsoup.parse(outputJson).select(".-total").get(2).text().replace(",", ""));
-        stackUserInfo.put("BadgeDetails", badgeDetails);
+        try {
+            badgeDetails.put("goldBadgeCount",
+                    Jsoup.parse(outputJson).select(".badge1-alternate>.-total").text().replace(",", ""));
+        }
+        catch (IllegalArgumentException|IndexOutOfBoundsException e){
+            badgeDetails.put("goldBadgeCount","null");
+        }
 
+        try {
+            badgeDetails.put("silverBadgeCount",
+                    Jsoup.parse(outputJson).select(".badge2-alternate>.-total").text().replace(",", ""));
+        }
+        catch (IllegalArgumentException|IndexOutOfBoundsException e){
+            badgeDetails.put("silverBadgeCount","null");
+        }
+
+        try {   badgeDetails.put("bronzeBadgeCount",
+                Jsoup.parse(outputJson).select(".badge3-alternate>.-total").text().replace(",", ""));
+            stackUserInfo.put("BadgeDetails", badgeDetails);
+        }
+        catch (IllegalArgumentException|IndexOutOfBoundsException e){
+            badgeDetails.put("bronzeBadgeCount","null");
+        }
+        
         stackUserInfo.put("reputation",
                 Jsoup.parse(outputJson).select(".reputation").text().replaceAll("[^\\d]", ""));
         stackUserInfo.put("numberOfAnswers",
@@ -103,28 +121,32 @@ public class Crawler {
         stackUserInfo.put("peopleReached",
                 Jsoup.parse(outputJson).select(".people-helped>span").text().replace(",", ""));
 
-        skillInfo.put("Score",
-                Jsoup.parse(outputJson).select(".g-col.-number").get(0).text().replace(",", ""));
-        skillInfo.put("Posts",
-                Jsoup.parse(outputJson).select(".g-col.-number").get(1).text().replace(",", ""));
-        skillMap.add(skillInfo);
+        try {
+            skillInfo.put("Score",
+                    Jsoup.parse(outputJson).select(".g-col.-number").get(0).text().replace(",", ""));
 
-        for (int i = 3; i < 12; i += 2) {
-            skillInfo = new HashMap<>();
-            skillInfo.put("Score", Jsoup.parse(outputJson).select(".g-col.-number").get(i).text()
-                    .replace(",", ""));
             skillInfo.put("Posts",
-                    Jsoup.parse(outputJson).select(".g-col.-number").get(i + 1).text()
-                            .replace(",", ""));
+                    Jsoup.parse(outputJson).select(".g-col.-number").get(1).text().replace(",", ""));
             skillMap.add(skillInfo);
-        }
 
-        for (int i = 0; i < 5; i++) {
-            userTopSkills.put(Jsoup.parse(outputJson).select(".post-tag").get(i).text(),
-                    skillMap.get(i));
+            for (int i = 3; i < Jsoup.parse(outputJson).select(".g-col.-number").size(); i += 2) {
+                skillInfo = new HashMap<>();
+                skillInfo.put("Score", Jsoup.parse(outputJson).select(".g-col.-number").get(i).text()
+                        .replace(",", ""));
+                skillInfo.put("Posts", Jsoup.parse(outputJson).select(".g-col.-number").get(i + 1).text()
+                        .replace(",", ""));
+                skillMap.add(skillInfo);
+            }
+        }
+        catch (IndexOutOfBoundsException e){
+            skillInfo = null;
+        }
+        for (int i = 0; i < Jsoup.parse(outputJson).select(".post-tag").size(); i++) {
+            userTopSkills.put(Jsoup.parse(outputJson).select(".post-tag").get(i).text(), skillMap.get(i));
         }
 
         stackUserInfo.put("SkillSet", userTopSkills);
+        System.out.println(stackUserInfo);
         return stackUserInfo;
     }
 
