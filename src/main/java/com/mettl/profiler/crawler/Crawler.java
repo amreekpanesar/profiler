@@ -14,21 +14,26 @@ import org.jsoup.select.Elements;
 public class Crawler {
 
 
-    public String getLinks(String firstName, String lastName, String location, String fetcher) {
+    public String getLinks(String firstName, String lastName, String location, String email,
+            String source) {
 
-        if (fetcher.contains("stack")) {
+        if (source.contains("stack")) {
             String url =
-                    "https://stackoverflow.com/users/filter?search="+ firstName + "+" + lastName+"&filter=All&tab=Reputation&_="+System.currentTimeMillis();
+                    "https://stackoverflow.com/users/filter?search=" + firstName + "+" + lastName
+                            + "&filter=All&tab=Reputation&_=" + System.currentTimeMillis();
             //String url = "https://stackoverflow.com/users";
 
-            RestAssured.urlEncodingEnabled=false;
-            String users = RestAssured.given().header("X-Requested-With","XMLHttpRequest").header("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36").get(url).getBody().asString();
+            RestAssured.urlEncodingEnabled = false;
+            String users = RestAssured.given().header("X-Requested-With", "XMLHttpRequest")
+                    .header("User-Agent",
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36")
+                    .get(url).getBody().asString();
             Elements userNames = Jsoup.parse(users).select("div[class=user-details]>a");
             Elements userLocation = Jsoup.parse(users).select(".user-location");
             String userURL = null;
 
             for (int i = 0; i < userNames.size(); i++) {
-                if (userNames.get(i).text().toLowerCase().contains(firstName))
+                if (userNames.get(i).text().toLowerCase().contains(firstName.toLowerCase()))
                     //if(userLocation.get(i).text().contains(location)) {}
                     userURL = "https://stackoverflow.com/" + userNames.get(i).attr("href");
                 break;
@@ -37,8 +42,34 @@ public class Crawler {
             return userURL;
         }
 
+        if (source.contains("git")) {
+            String searchUrl = "https://api.github.com/search/users?q=" + firstName;
+            String searchResultJson = RestAssured.given().get(searchUrl).getBody().asString();
+            int searchResultCounts = JsonPath.read(searchResultJson, "$.total_count");
+            //LinkedList<String > profileUrls= new LinkedList<>();
+            //profileUrls.add("https://api.github.com/users/"+JsonPath.read(searchResultJson,"$.items."+i+".login")+"/events/public");
+            JSONArray userNames = JsonPath.read(searchResultJson, "$..login");
 
-        if (fetcher.contains("linkedin")) {
+            for (int i = 0; i < searchResultCounts; i++) {
+                String profileUrls =
+                        "https://api.github.com/users/" + userNames.get(i) + "/events/public";
+
+                String publicProfileJson =
+                        RestAssured.given().get(profileUrls).getBody().asString();
+                if (!(publicProfileJson.equalsIgnoreCase("[]"))) {
+                    JSONArray visibleEmails = JsonPath.read(publicProfileJson, "$..email");
+                    for (int j = 0; j < visibleEmails.size(); j++) {
+                        if (email.equalsIgnoreCase(visibleEmails.get(j).toString())) {
+                            System.out.println("https://github.com/" + userNames.get(i));
+                            return "https://github.com/" + userNames.get(i);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if (source.contains("linkedin")) {
             String key = "AIzaSyBXonlcNZ2ka9xAzvWnj6-tjNwE4hwIQLQ";
             String qry = "amreek+mettl";
             String cx = "009230221581079861830%3Au_oznyobngi";
@@ -74,9 +105,10 @@ public class Crawler {
     //        System.out.println(outputJson);
     //    }
 
-    public Map<String, Object> getStackOverflowProfile() {
+    public String getStackOverflowProfile(String firstName, String lastName, String location,
+            String email) {
 
-        String url = getLinks("karan", "malhotra", "", "stack");
+        String url = getLinks(firstName, lastName, location, email, "stack");
         String outputJson = RestAssured.given().header("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:55.0) Gecko/20100101 Firefox/55.0")
                 .header("Accept",
@@ -90,28 +122,31 @@ public class Crawler {
 
         try {
             badgeDetails.put("goldBadgeCount",
-                    Jsoup.parse(outputJson).select(".badge1-alternate>.-total").text().replace(",", ""));
-        }
-        catch (IllegalArgumentException|IndexOutOfBoundsException e){
-            badgeDetails.put("goldBadgeCount","null");
+                    Jsoup.parse(outputJson).select(".badge1-alternate>.-total").text()
+                            .replace(",", ""));
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+            badgeDetails.put("goldBadgeCount", "null");
         }
 
         try {
             badgeDetails.put("silverBadgeCount",
-                    Jsoup.parse(outputJson).select(".badge2-alternate>.-total").text().replace(",", ""));
-        }
-        catch (IllegalArgumentException|IndexOutOfBoundsException e){
-            badgeDetails.put("silverBadgeCount","null");
+                    Jsoup.parse(outputJson).select(".badge2-alternate>.-total").text()
+                            .replace(",", ""));
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+            badgeDetails.put("silverBadgeCount", "null");
         }
 
-        try {   badgeDetails.put("bronzeBadgeCount",
-                Jsoup.parse(outputJson).select(".badge3-alternate>.-total").text().replace(",", ""));
+        try {
+            badgeDetails.put("bronzeBadgeCount",
+                    Jsoup.parse(outputJson).select(".badge3-alternate>.-total").text()
+                            .replace(",", ""));
+
+
             stackUserInfo.put("BadgeDetails", badgeDetails);
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+            badgeDetails.put("bronzeBadgeCount", "null");
         }
-        catch (IllegalArgumentException|IndexOutOfBoundsException e){
-            badgeDetails.put("bronzeBadgeCount","null");
-        }
-        
+
         stackUserInfo.put("reputation",
                 Jsoup.parse(outputJson).select(".reputation").text().replaceAll("[^\\d]", ""));
         stackUserInfo.put("numberOfAnswers",
@@ -122,37 +157,39 @@ public class Crawler {
                 Jsoup.parse(outputJson).select(".people-helped>span").text().replace(",", ""));
 
         try {
-            skillInfo.put("Score",
-                    Jsoup.parse(outputJson).select(".g-col.-number").get(0).text().replace(",", ""));
+            skillInfo.put("Score", Jsoup.parse(outputJson).select(".g-col.-number").get(0).text()
+                    .replace(",", ""));
 
-            skillInfo.put("Posts",
-                    Jsoup.parse(outputJson).select(".g-col.-number").get(1).text().replace(",", ""));
+            skillInfo.put("Posts", Jsoup.parse(outputJson).select(".g-col.-number").get(1).text()
+                    .replace(",", ""));
             skillMap.add(skillInfo);
 
             for (int i = 3; i < Jsoup.parse(outputJson).select(".g-col.-number").size(); i += 2) {
                 skillInfo = new HashMap<>();
-                skillInfo.put("Score", Jsoup.parse(outputJson).select(".g-col.-number").get(i).text()
-                        .replace(",", ""));
-                skillInfo.put("Posts", Jsoup.parse(outputJson).select(".g-col.-number").get(i + 1).text()
-                        .replace(",", ""));
+                skillInfo.put("Score",
+                        Jsoup.parse(outputJson).select(".g-col.-number").get(i).text()
+                                .replace(",", ""));
+                skillInfo.put("Posts",
+                        Jsoup.parse(outputJson).select(".g-col.-number").get(i + 1).text()
+                                .replace(",", ""));
                 skillMap.add(skillInfo);
             }
-        }
-        catch (IndexOutOfBoundsException e){
+        } catch (IndexOutOfBoundsException e) {
             skillInfo = null;
         }
         for (int i = 0; i < Jsoup.parse(outputJson).select(".post-tag").size(); i++) {
-            userTopSkills.put(Jsoup.parse(outputJson).select(".post-tag").get(i).text(), skillMap.get(i));
+            userTopSkills.put(Jsoup.parse(outputJson).select(".post-tag").get(i).text(),
+                    skillMap.get(i));
         }
 
         stackUserInfo.put("SkillSet", userTopSkills);
-        System.out.println(stackUserInfo);
-        return stackUserInfo;
+        String jsonString = new JSONObject(stackUserInfo).toString();
+        return jsonString;
     }
 
-    public Map<String, Object> getGitHubData() {
+    public String getGitHubData(String firstName, String lastName, String location, String email) {
 
-        String url = getLinks("meghna", "bhasin", "", "git");
+        String url = getLinks(firstName, lastName, location, email, "git");
         ResponseBody response = RestAssured.given().get(url).getBody();
 
         Map<String, String> data = new LinkedHashMap<String, String>();
@@ -167,8 +204,8 @@ public class Crawler {
                 Jsoup.parse(response.asString()).select("a[title=Following] span").text());
 
         JSONObject gitHubJSon = new JSONObject(data);
-        System.out.println(gitHubJSon);
-        return gitHubJSon;
+        System.out.println(gitHubJSon.toJSONString());
+        return gitHubJSon.toJSONString();
     }
 
 }
