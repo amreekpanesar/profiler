@@ -1,20 +1,24 @@
 package com.mettl.profiler.dao;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 @Entity
 public class CandidateData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @OneToOne(mappedBy = "candidate_id")
     private Integer id;
-    
+
     private String email;
     private String firstName;
     private String crfJson;
 
-    public CandidateData() {
-    }
+    public CandidateData() {}
 
     public CandidateData(Integer id, String email, String firstName, String crfJson) {
         this.id = id;

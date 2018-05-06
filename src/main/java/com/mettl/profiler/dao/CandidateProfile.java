@@ -1,6 +1,11 @@
 package com.mettl.profiler.dao;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 
 @Entity
 public class CandidateProfile {
@@ -8,18 +13,22 @@ public class CandidateProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @OneToOne
+    @JoinColumn(name = "candidatedata_id")
     private Integer candidate_id;
-    private String linkedIn_json;
+
+    private String linkedin_json;
     private String github_json;
     private String so_json;
 
-    public CandidateProfile() {
-    }
+    public CandidateProfile() {}
 
-    public CandidateProfile(Integer id, Integer candidate_id, String linkedIn_json, String github_json, String so_json) {
+    public CandidateProfile(Integer id, Integer candidate_id, String linkedIn_json,
+            String github_json, String so_json) {
         this.id = id;
         this.candidate_id = candidate_id;
-        this.linkedIn_json = linkedIn_json;
+        this.linkedin_json = linkedIn_json;
         this.github_json = github_json;
         this.so_json = so_json;
     }
@@ -43,11 +52,11 @@ public class CandidateProfile {
     }
 
     public String getLinkedIn_json() {
-        return linkedIn_json;
+        return linkedin_json;
     }
 
     public CandidateProfile setLinkedIn_json(String linkedIn_json) {
-        this.linkedIn_json = linkedIn_json;
+        this.linkedin_json = linkedIn_json;
         return this;
     }
 
