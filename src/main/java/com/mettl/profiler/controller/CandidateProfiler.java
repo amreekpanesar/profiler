@@ -1,6 +1,5 @@
 package com.mettl.profiler.controller;
 
-import com.mettl.profiler.crawler.Crawler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +8,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jayway.jsonpath.JsonPath;
+import com.mettl.profiler.crawler.Crawler;
 import com.mettl.profiler.dao.CandidateData;
 import com.mettl.profiler.dao.CandidateProfile;
 import com.mettl.profiler.service.CandidateProfileService;
@@ -57,14 +58,17 @@ public class CandidateProfiler {
 
         candidateData.setfirstName(firstName);
         candidateData.setEmail(email);
-        candidateData.setCrfJson("{\"location\":\"" + location +"\",\"lastName\":\"" +  lastName  + "\"}");
+        candidateData.setCrfJson(
+                "{\"location\":\"" + location + "\",\"lastName\":\"" + lastName + "\"}");
         candidateService.createCandidate(candidateData);
 
         CandidateProfile candidateProfile = new CandidateProfile();
-        candidateProfile.setGithub_json(crawler.getGitHubData(firstName, lastName, location , email));
+        candidateProfile
+                .setGithub_json(crawler.getGitHubData(firstName, lastName, location, email));
 
         candidateProfile.setLinkedIn_json("");
-        candidateProfile.setSo_json(crawler.getStackOverflowProfile(firstName, lastName, location, email));
+        candidateProfile
+                .setSo_json(crawler.getStackOverflowProfile(firstName, lastName, location, email));
         candidateProfileService.createCandidateProfile(candidateProfile);
 
         return "{\"success\":true}";
@@ -72,14 +76,14 @@ public class CandidateProfiler {
     }
 
     // Get Profile by ID
-    @RequestMapping(method = RequestMethod.GET, value = "/getProfile/{id}")
-    public CandidateProfile getProfile(@PathVariable Integer id) {
-        return candidateProfileService.getCandidateProfile("sdsad");
+    @RequestMapping(method = RequestMethod.GET, value = "/getProfile/id/{id}")
+    public CandidateProfile getProfile(@PathVariable int id) {
+        return candidateProfileService.getCandidateProfile(id);
     }
 
     // Get Profile by email
-    @RequestMapping(method = RequestMethod.GET, value = "/getProfile/{email}")
-    public CandidateProfile getProfile(@PathVariable String email) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getProfile/email/{email}")
+    public CandidateProfile getProfile( String email) {
         return candidateProfileService.getCandidateProfile("sdsad");
     }
 
