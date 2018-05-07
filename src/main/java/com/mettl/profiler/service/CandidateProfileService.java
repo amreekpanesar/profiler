@@ -24,6 +24,7 @@ public class CandidateProfileService {
     public CandidateService candidateService;
 
     public CandidateProfile getCandidateProfile(String email) {
+        //TODO
         return new CandidateProfile();
     }
 
