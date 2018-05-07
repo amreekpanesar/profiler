@@ -79,7 +79,7 @@ public class Crawler {
             // profileUrls.add("https://api.github.com/users/"+JsonPath.read(searchResultJson,"$.items."+i+".login")+"/events/public");
             JSONArray userNames = JsonPath.read(searchResultJson, "$..login");
 
-            for (int i = 0; i < searchResultCounts - 1; i++) {
+            for (int i = 0; i < userNames.size() - 1; i++) {
                 String profileUrls =
                         "https://api.github.com/users/" + userNames.get(i) + "/events/public";
 
