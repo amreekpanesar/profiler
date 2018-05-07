@@ -23,8 +23,6 @@ public class CandidateProfiler {
 
     Logger log = LogManager.getRootLogger();
 
-    Crawler crawler = new Crawler();
-
     @Autowired
     public CandidateService candidateService;
 
@@ -45,7 +43,6 @@ public class CandidateProfiler {
     }
 
     // Create candidate and then create Profile
-    @Async
     @RequestMapping(method = RequestMethod.POST, value = "/createProfile")
     public String createProfile(@RequestBody String crfJson) {
 
@@ -60,19 +57,9 @@ public class CandidateProfiler {
         candidateData.setEmail(email);
         candidateData.setCrfJson(
                 "{\"location\":\"" + location + "\",\"lastName\":\"" + lastName + "\"}");
-        candidateService.createCandidate(candidateData);
 
-        CandidateProfile candidateProfile = new CandidateProfile();
-        candidateProfile
-                .setGithub_json(crawler.getGitHubData(firstName, lastName, location, email));
-
-        candidateProfile.setLinkedIn_json("");
-        candidateProfile
-                .setSo_json(crawler.getStackOverflowProfile(firstName, lastName, location, email));
-        candidateProfileService.createCandidateProfile(candidateProfile);
-
+        candidateProfileService.createCandidateProfile(candidateData);
         return "{\"success\":true}";
-
     }
 
     // Get Profile by ID
@@ -86,6 +73,5 @@ public class CandidateProfiler {
     public CandidateProfile getProfile( String email) {
         return candidateProfileService.getCandidateProfile("sdsad");
     }
-
 
 }
