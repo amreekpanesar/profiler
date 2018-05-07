@@ -1,22 +1,16 @@
 package com.mettl.profiler.controller;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.jayway.jsonpath.JsonPath;
 import com.mettl.profiler.dao.CandidateData;
 import com.mettl.profiler.dao.CandidateProfile;
 import com.mettl.profiler.service.CandidateProfileService;
 import com.mettl.profiler.service.CandidateService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
@@ -42,36 +36,46 @@ public class CandidateProfiler {
     @RequestMapping(method = RequestMethod.GET, value = "/getCandidate/{id}")
     public ResponseEntity<CandidateData> getCandidate(@PathVariable String id) {
         CandidateData candidateData = null;
-        try{
+        try {
             candidateData = candidateService.getCandidate(Integer.parseInt(id));
             return new ResponseEntity<>(candidateData, HttpStatus.OK);
-        }
-        catch (NoSuchElementException e){
-            return new ResponseEntity<>(candidateData , HttpStatus.NOT_FOUND);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(candidateData, HttpStatus.NOT_FOUND);
         }
     }
 
     // Create candidate and then create Profile
     @RequestMapping(method = RequestMethod.POST, value = "/createProfile")
     public String createProfile(@RequestBody String crfJson) {
-        try{
+        try {
             CandidateData candidateData = new CandidateData();
 
-            String firstName = JsonPath.read(crfJson, "$.name");
-            String email = JsonPath.read(crfJson, "$.email");
-            String lastName = JsonPath.read(crfJson, "$.lastName");
-            String location = JsonPath.read(crfJson, "$.location");
+            String firstName = "";
+            String email = "";
+            String lastName = "";
+            String location = "";
+            String organization = "";
+
+            try {
+                firstName = JsonPath.read(crfJson, "$.name");
+                email = JsonPath.read(crfJson, "$.email");
+                lastName = JsonPath.read(crfJson, "$.lastName");
+                location = JsonPath.read(crfJson, "$.location");
+                organization = JsonPath.read(crfJson, "$.organization");
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             candidateData.setfirstName(firstName);
             candidateData.setEmail(email);
             candidateData.setCrfJson(
-                    "{\"location\":\"" + location + "\",\"lastName\":\"" + lastName + "\"}");
+                    "{\"location\":\"" + location + "\", \"organization\":\"" + organization + "\" ,\"lastName\":\"" + lastName + "\"}");
 
             candidateProfileService.createCandidateProfile(candidateData);
 
             return "{\"success\":true}";
-        }
-        catch (Exception e ){
+        } catch (Exception e) {
             return "{\"success\":false}";
         }
     }
@@ -80,12 +84,12 @@ public class CandidateProfiler {
     @RequestMapping(method = RequestMethod.GET, value = "/getProfile/id/{id}")
     public ResponseEntity<CandidateProfile> getProfile(@PathVariable int id) {
         CandidateProfile candidateProfile = null;
-        try{
+        try {
             candidateProfile = candidateProfileService.getCandidateProfile(id);
             return new ResponseEntity<>(candidateProfile, HttpStatus.OK);
-        }
-        catch (NoSuchElementException e){
-            return new ResponseEntity<>(candidateProfile , HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(candidateProfile, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -93,13 +97,11 @@ public class CandidateProfiler {
     @RequestMapping(method = RequestMethod.GET, value = "/getProfile/email/{email}")
     public ResponseEntity<CandidateProfile> getProfile(@PathVariable String email) {
         CandidateProfile candidateProfile = null;
-        try{
+        try {
             candidateProfile = candidateProfileService.getCandidateProfile(email);
             return new ResponseEntity<>(candidateProfile, HttpStatus.OK);
-        }
-        catch (NoSuchElementException e){
-            return new ResponseEntity<>(candidateProfile , HttpStatus.NOT_FOUND);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(candidateProfile, HttpStatus.NOT_FOUND);
         }
     }
-
 }

@@ -9,14 +9,14 @@ public class CandidateProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private Integer candidate_id;
+    private String candidate_id;
     private String linkedin_json;
     private String github_json;
     private String so_json;
 
     public CandidateProfile() {}
 
-    public CandidateProfile(Integer id, Integer candidate_id, String linkedIn_json,
+    public CandidateProfile(Integer id, String candidate_id, String linkedIn_json,
             String github_json, String so_json) {
         this.id = id;
         this.candidate_id = candidate_id;
@@ -34,11 +34,11 @@ public class CandidateProfile {
         return this;
     }
 
-    public Integer getCandidate_id() {
+    public String getCandidate_id() {
         return candidate_id;
     }
 
-    public CandidateProfile setCandidate_id(Integer candidate_id) {
+    public CandidateProfile setCandidate_id(String candidate_id) {
         this.candidate_id = candidate_id;
         return this;
     }

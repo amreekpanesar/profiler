@@ -47,25 +47,30 @@ public class CandidateProfileService {
         String crfJson = candidateData.getCrfJson();
 
         CandidateProfile candidateProfile = new CandidateProfile();
+
+        candidateProfile.setCandidate_id(candidateData.getEmail());
         candidateProfile.setGithub_json(
-                        crawler.getGitHubData(
-                                candidateData.getfirstName(),
-                                JsonPath.read(crfJson, "$.location"),
-                                JsonPath.read(crfJson, "$.location"),
-                                candidateData.getEmail())
-                );
+                crawler.getGitHubData(
+                        candidateData.getfirstName(),
+                        JsonPath.read(crfJson, "$.lastName"),
+                        JsonPath.read(crfJson, "$.location"),
+                        JsonPath.read(crfJson, "$.organization"),
+                        candidateData.getEmail())
+        );
         candidateProfile.setLinkedIn_json(
                 crawler.getGitHubData(
                         candidateData.getfirstName(),
+                        JsonPath.read(crfJson, "$.lastName"),
                         JsonPath.read(crfJson, "$.location"),
-                        JsonPath.read(crfJson, "$.location"),
+                        JsonPath.read(crfJson, "$.organization"),
                         candidateData.getEmail()));
 
         candidateProfile.setSo_json(
                 crawler.getStackOverflowProfile(
                         candidateData.getfirstName(),
+                        JsonPath.read(crfJson, "$.lastName"),
                         JsonPath.read(crfJson, "$.location"),
-                        JsonPath.read(crfJson, "$.location"),
+                        JsonPath.read(crfJson, "$.organization"),
                         candidateData.getEmail())
         );
         candidateProfileRepository.save(candidateProfile);
